@@ -38,8 +38,8 @@ int main()
     DB          db;
     File*	file1;
     File*	file2;
-    File* 	file3;
-    File*       file4;
+    File* file3;
+    File* file4;
     int		i;
     const int   num = 100;
     int         j[num];    
@@ -148,7 +148,7 @@ int main()
 
 #ifdef DEBUGBUF
     bufMgr->printSelf();
-#endif DEBUGBUF
+#endif
 
     cout << "\nReading \"test.1\"...\n";
     cout << "Expected Result: ";
@@ -223,7 +223,7 @@ int main()
 
 #ifdef DEBUGBUF
     bufMgr->printSelf();
-#endif DEBUGBUF
+#endif
 
     for (i = 0; i < num; i++)
       CALL(bufMgr->unPinPage(file4, i+2, true));
