@@ -16,20 +16,30 @@ const Status createHeapFile(const string fileName)
     if (status != OK)
     {
 		// file doesn't exist. First create it and allocate
-		// an empty header page and data page.
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		// an empty header page and data page	
+		status = db.createFile(fileName);	
+		status = db.openFile(fileName, file);
+		status = bufMgr->allocPage(file, hdrPageNo, newPage);
+
+		hdrPage = (FileHdrPage*) newPage;
+
+
+		int len = (int) fileName.length();
+		for (int i = 0; i < len; i++) hdrPage->fileName[i] = fileName[i];
+		hdrPage->fileName[len] = '\0'; 
+
+
+		status = bufMgr->allocPage(file, newPageNo, newPage);
+		newPage->init(newPageNo);
+
+		hdrPage->firstPage = newPageNo;
+		hdrPage->lastPage = newPageNo;
+		hdrPage->pageCnt = 1;
+		hdrPage->recCnt = 0;
+
+		status = bufMgr->unPinPage(file, hdrPageNo, true);
+		status = bufMgr->unPinPage(file, newPageNo, true);
+				
     }
     return (FILEEXISTS);
 }
@@ -51,16 +61,20 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
+		status = filePtr->getFirstPage(headerPageNo);
+		status = bufMgr->readPage(filePtr, headerPageNo, pagePtr);
+
+		headerPage = (FileHdrPage*) pagePtr;
+		hdrDirtyFlag = false;
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+
+		curPageNo = headerPage->firstPage;
+		status = bufMgr->readPage(filePtr, curPageNo, curPage);
+		curDirtyFlag = false;
+		curRec = NULLRID;
+
+		returnStatus = OK;
+		return;
 		
     }
     else
@@ -120,13 +134,30 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
     Status status;
 
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
-   
-   
-   
-   
-   
-   
-   
+ 
+
+ 	if(curPage != NULL){
+		status = curPage->getRecord(rid, rec);
+		if(status == OK) return OK;
+	};
+
+
+	if(curPage != NULL){
+		status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+	}
+	
+	curPageNo = rid.pageNo;
+	status = bufMgr->readPage(filePtr, curPageNo, curPage);
+	curDirtyFlag = 0;
+
+	status = curPage->getRecord(rid, rec);
+	if (status != OK){
+		cerr << "Record does not exist";
+		Error e;
+		e.print(status);
+	}
+
+  	return OK; 
 }
 
 HeapFileScan::HeapFileScan(const string & name,
