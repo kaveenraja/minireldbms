@@ -45,6 +45,7 @@ const Status QU_Insert(const string & relation,
             float val = atof((char*)attrList[i].attrValue);
             memcpy(dest, &val, sizeof(float));
         }
+        // Just copies the bytes for a string
         else memcpy(dest, attrList[i].attrValue, attrDescArray[i].attrLen);
     }
 
